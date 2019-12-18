@@ -67,7 +67,7 @@ def uplink_handler(packet):
     channels = []
     for channel in mi.grouper(3, nibbles):
         num = (channel[0] << 8) + (channel[1] << 4) + channel[2]
-        if(num != 0) and (num < 190):
+        if(num != 0):
             channels.append(num)
     channels = np.array(channels)
 
