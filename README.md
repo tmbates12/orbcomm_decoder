@@ -6,3 +6,8 @@ most convienently through a Virtual Audio Cable.
 
 orbcomm.py inputs symbols from the GNU Radio flowgraph over UDP, default port 10000 and then
 outputs the decoded packet content to stdout.
+
+### Required Python Packages
+* numpy
+* more_itertools
+* pyproj
