@@ -62,8 +62,7 @@ def uplink_handler(packet):
     for byte in channels:
         nibbles.append((byte & 0xF0) >> 4)
         nibbles.append(byte & 0xF)
-    nibbles.pop(0)
-    nibbles.pop(1)
+    nibbles = nibbles[2:]
     channels = []
     for channel in mi.grouper(3, nibbles):
         num = (channel[0] << 8) + (channel[1] << 4) + channel[2]
@@ -203,6 +202,8 @@ def framer():
             frame.append(pending_bits.popleft())
             if frame[0:24] == sync:
                 pending_frames.append(list(frame))
+        else:
+            time.sleep(0.25)
 
 
 def packetizer():
@@ -217,7 +218,7 @@ def packetizer():
             for packet in mi.grouper(frame_bytes, 12):
                 pending_packets.append(list(packet))
         else:
-            time.sleep(0.1)
+            time.sleep(0.25)
 
 
 def packet_parse():
@@ -243,7 +244,7 @@ def packet_parse():
             if packet[0] == packet_types['elems'] and packet_enabled['elems']:
                 element_handler(packet)
         else:
-            time.sleep(1 / 600)
+            time.sleep(0.25)
 
 
 def main():
