@@ -7,6 +7,7 @@ import math
 import datetime as dt
 import more_itertools as mi
 import binascii as ba
+import pyproj
 
 pending_bits = collections.deque()
 pending_frames = collections.deque()
@@ -25,6 +26,13 @@ def fletcher_decode(data):
 def gps2date(week, seconds):
     epoch = dt.datetime(1980, 1, 6)
     return epoch + dt.timedelta(weeks=week) + dt.timedelta(seconds=seconds)
+
+
+def ecef2lla(x, y, z):
+    p1 = pyproj.Proj(proj='geocent', ellps='WGS84', datum='WGS84')
+    p2 = pyproj.Proj(proj='latlong', ellps='WGS84', datum='WGS84')
+    lon, lat, alt = pyproj.transform(p1, p2, x, y, z, radians=False)
+    return lat, lon, alt
 
 
 def synch_handler(packet):
@@ -145,11 +153,16 @@ def epemeris_hander(packet):
     # Magnitude of Velocity
     vel_orbit = math.sqrt(pow(velX, 2) + pow(velY, 2) + pow(velZ, 2))
 
+    # ECEF to Lat, Lon, and Altitude
+    lat, lon, alt = ecef2lla(posX * 1000, posY * 1000, posZ * 1000)
+
     print("\n[Ephemeris Packet]")
     print("Spacecraft ID: {}".format(scid))
     print("GPS Date: {}".format(gps2date(week, seconds)))
-    print("Position: X = {0:.3f}km Y = {1:.3f}km Z = {2:.3f}km"
-          .format(posX, posY, posZ))
+    # print("Position: X = {0:.3f}km Y = {1:.3f}km Z = {2:.3f}km"
+    #      .format(posX, posY, posZ))
+    print("Position: Latitude = {0:.3f}° Longitude = {1:.3f}° "
+          "Altitude = {2:.3f}km".format(lat, lon, alt / 1000))
     print("Velocity: X = {0:.3f}km/s Y = {1:.3f}km/s Z = {2:.3f}km/s"
           .format(velX, velY, velZ))
     print("Height = {0:.3f}km Orbital Velocity = {1:.3f}km/s"
@@ -169,8 +182,8 @@ def element_handler(packet):
 
     print("\n[Element Packet]")
     print("Spacecraft ID: {}".format(scid))
-    print("Mean Anomaly: {}".format(mean_anomaly))
-    print("Mean Motion: {}".format(mean_motion))
+    print("Mean Anomaly: {:.4f}°".format(mean_anomaly))
+    print("Mean Motion: {:.4f} revs/day".format(mean_motion))
 
 
 def udp_input(address, port):
